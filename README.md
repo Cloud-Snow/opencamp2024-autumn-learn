@@ -44,8 +44,21 @@ Try `cd rustlings/`!
 ---
 #### 事件
 - 帮助同学配置了rustlings环境，同时发现了一个奇怪的问题。
-- 学习智能指针和并发操作，了解到需要修改数据时使用`Arc::new(Mutex::new(...))`，只读数据数据的话用`Arc::new(...)`就行
 - 下载了Markdown Preview插件，感觉还挺好用。
+- 学习智能指针和并发操作，了解到需要修改数据时使用`Arc::new(Mutex::new(...))`，只读数据数据的话用`Arc::new(...)`就行。
+- Cow（Clone on Write）是一种智能指针，用于在需要时进行克隆。它可以在借用和拥有之间切换，从而在性能和内存使用之间取得平衡，定义如下：
+``` rust
+enum Cow<'a, B: ?Sized + 'a>
+where
+    B: ToOwned,
+{
+    Borrowed(&'a B),
+    Owned(<B as ToOwned>::Owned),
+}
+```
+- **Borrowed**：表示一个借用的引用。
+**Owned**：表示一个拥有的值。
+
 
 #### 问题1
 - 今天遇到了一个很奇怪的问题，以下截图中左侧为`tests/cicv.rs`文件，右侧是`exercises/varibles1.rs`。
