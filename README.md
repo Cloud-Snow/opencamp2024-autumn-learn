@@ -5,7 +5,7 @@
 - [常见问题](https://opencamp.cn/os2edu/bbs/1382)
 
 **课程安排**
-![课程安排](https://ssl.cdn.maodouketang.com/FjHMtSlM-PwPAX6ttHeElzZwe07E)
+![课程安排](/src/all/schedule.png)
 
 ## 第一阶段 Rust & Rustlings
 ### 资料
@@ -42,6 +42,9 @@ Try `cd rustlings/`!
 
 ### 2024/09/30
 ---
+#### 进展
+81/110
+
 #### 事件
 - 帮助同学配置了rustlings环境，同时发现了一个奇怪的问题。
 - 下载了Markdown Preview插件，感觉还挺好用。
