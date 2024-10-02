@@ -28,12 +28,9 @@
 
 #### 问题1
 - 构建rustlings环境时，[rustlings仓库][rustlings]README文档有以下这段话
-> /home/{uername}/.cargo/bin/rustlings must be run from the rustlings directory<br>
-Try `cd rustlings/`!
-
-- 但我根据文档操作后却提示
 > 进入clone下来的目录下的`exercises`文件夹，执行`rustlings watch`依次查看完成情况，并依次完成对应的练习。
-
+- 但我根据文档操作后却提示
+> /home/{uername}/.cargo/bin/rustlings must be run from the rustlings directory<br>Try cd rustlings/!
 - 然而我在仓库中并没有找到`rustlings`目录，后来猛然发现这个仓库的根目录其实就是`rustlings`目录，于是我便在根目录下执行`rustlings watch`，果然成功。
 
 - **总结**：我怀疑README文档有误，不应该进入`exercises`文件夹，应该直接在根目录下执行命令。
@@ -66,7 +63,6 @@ where
 - **Borrowed**：表示一个借用的引用。
 **Owned**：表示一个拥有的值。
 
-
 #### 问题1
 - 今天遇到了一个很奇怪的问题，以下截图中左侧为`tests/cicv.rs`文件，右侧是`exercises/varibles1.rs`。
 - 当我只把rustlings添加到vscode工作区后，analyzer可以分析exercises中的文件，却不能分析tests和src中的文件。
@@ -81,9 +77,33 @@ where
 #### 进展
 93/110
 #### 事件
-- 今日<font color=red>国庆</font>，祝祖国母亲75岁生日快乐！:satisfied:
+- 今日<font color=red>国庆</font>，祝祖国母亲75岁生日快乐！ヾ(≧▽≦*)o
 #### 学习内容
 - 更加细致地了解了rust是如何实现线程间通信
 - 了解了宏的基本概念和用法
 - 体验了clippy工具的功能
 - 学习了如何在rust中进行类型转换
+
+### 2024/10/02
+#### 事件
+-  放假了是真学不进啊。ε(┬┬﹏┬┬)3
+- 才发现原来这个conversions专题是要我补充自定义类型的from等实现啊，我还在想怎么用上from呢。。。
+#### 学习内容
+- 下面两组代码是等价的。
+``` rust
+let age = parts[1]
+    .parse::<usize>()
+    .map_err(ParsePersonError::ParseInt)?;
+```
+``` rust
+let age = match parts[1].parse::<usize>() {
+    Ok(value) => value,
+    Err(e) => return Err(ParsePersonError::ParseInt(e)),
+};
+```
+> map_err 方法接受一个闭包或函数作为参数，当 Result 是 Err 时，它会将错误值传递给这个闭包或函数，并返回一个新的 Result，其中包含转换后的错误值。如果 Result 是 Ok，则直接返回 Ok 值
+
+> ? 运算符用于简化错误处理。它的作用是对 Result 或 Option 类型的值进行解包，如果是 Ok 或 Some，则返回内部的值；如果是 Err 或 None，则将错误或空值返回给调用者。
+- from_str被parse方法隐式调用。
+- try_from与from的区别是，try_from返回类型是Result，from返回类型是Self。
+- AsRef 用于将一个类型转换为另一个类型的引用。<br>AsMut 用于将一个类型转换为其内部数据的可变引用。
