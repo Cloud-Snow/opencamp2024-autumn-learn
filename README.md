@@ -85,6 +85,8 @@ where
 - 学习了如何在rust中进行类型转换
 
 ### 2024/10/02
+#### 进展
+96/110
 #### 事件
 -  放假了是真学不进啊。ε(┬┬﹏┬┬)3
 - 才发现原来这个conversions专题是要我补充自定义类型的from等实现啊，我还在想怎么用上from呢。。。
@@ -107,3 +109,27 @@ let age = match parts[1].parse::<usize>() {
 - from_str被parse方法隐式调用。
 - try_from与from的区别是，try_from返回类型是Result，from返回类型是Self。
 - AsRef 用于将一个类型转换为另一个类型的引用。<br>AsMut 用于将一个类型转换为其内部数据的可变引用。
+
+### 2024/10/03
+#### 进展
+100/110
+#### 事件
+- 链表怎么这么难写啊！！！(╯‵□′)╯︵┻━┻
+#### 学习内容
+- unsafe rust能进行的操作：
+    - 解引用裸指针
+    - 调用不安全的函数或方法
+    - 访问或修改可变静态变量
+    - 实现不安全 trait
+    - 访问 union 的字段 
+- `Box::into_raw` 和 `Box::from_raw` 是两个用于处理 Box 类型的原始指针的方法 。
+    - `Box::into_raw` 方法将一个` Box<T>` 转换为一个原始指针 `*mut T`，但不会释放内存。
+    - `Box::from_raw` 方法将一个原始指针 `*mut T` 转换回 `Box<T>`。这意味着你重新获得了该内存的所有权，并且 Box 将负责释放它。
+- 在 Rust 的构建脚本（build.rs）中，`cargo:` 后的属性用于与 Cargo 进行通信，以便在构建过程中设置环境变量、启用特性、指定重新编译条件等。
+    - `cargo:rustc-env=VAR_NAME=VALUE`，其中 `VAR_NAME` 是环境变量的名称，`VALUE` 是其值
+    - `cargo:rustc-cfg=feature="FEATURE_NAME"`，其中 `FEATURE_NAME` 是要启用的特性名称。
+- `#[no_mangle]` 属性用于防止 Rust 对函数名称进行重整，使得函数可以通过其原始名称进行链接和调用。
+- `#[link_name = "my_demo_function"]` 属性用于将 `my_demo_function_alias` 链接到 `my_demo_function`，使得它们实际上是同一个函数。
+- `NonNull`是 Rust 标准库中的一个指针类型，它保证指针永远不为 null。
+    - 使用 `NonNull::new_unchecked` 将一个原始指针转换为 `NonNull` 指针。这个方法是不安全的，因为它假设传入的指针不为 null。
+    - 使用 as_ptr 方法将 `NonNull`指针转换为原始指针，然后使用 unsafe 块解引用它。
