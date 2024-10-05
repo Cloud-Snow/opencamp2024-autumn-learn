@@ -132,4 +132,20 @@ let age = match parts[1].parse::<usize>() {
 - `#[link_name = "my_demo_function"]` 属性用于将 `my_demo_function_alias` 链接到 `my_demo_function`，使得它们实际上是同一个函数。
 - `NonNull`是 Rust 标准库中的一个指针类型，它保证指针永远不为 null。
     - 使用 `NonNull::new_unchecked` 将一个原始指针转换为 `NonNull` 指针。这个方法是不安全的，因为它假设传入的指针不为 null。
-    - 使用 as_ptr 方法将 `NonNull`指针转换为原始指针，然后使用 unsafe 块解引用它。
+    - 使用 `as_ptr` 方法将 `NonNull`指针转换为原始指针，然后使用 `unsafe` 块解引用它。
+    - 使用 `as_ref` 方法将 `NonNull`指针转换为不可变引用，调用时需要 `unsafe` 块。
+    - 使用 `as_mut` 方法将 `NonNull`指针转换为可变引用，调用时需要 `unsafe` 块。
+
+### 2024/10/04
+沉迷小说，进展无
+
+### 2024/10/05
+#### 进展
+104/110
+#### 事件
+- 昨天摆了一天，今天终于把链表合并解决了...( ＿ ＿)ノ｜
+- 之前一直用 `*(pa.unwrap().as_ptr).val` 来访问`NonNull`指向的值，今天才发现，用 `pa.unwrap().as_ref().val` 和 `pa.unwrap().as_mut().val` 会更方便一些。
+- 用明白Option和NonNull后还挺好用
+#### 学习内容
+- `NonNull`是裸指针类型，实现了`Copy trait`，不会发生所有权转移
+- `pa.unwrap().as_ref().val` 和 `pb.unwrap().as_ref().val` 是 T 类型的值。如果 T 没有实现 Copy trait，那么在比较这些值时会发生所有权转移，所以要加‘&’使用其引用
