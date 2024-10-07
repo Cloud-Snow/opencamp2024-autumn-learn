@@ -136,9 +136,6 @@ let age = match parts[1].parse::<usize>() {
     - 使用 `as_ref` 方法将 `NonNull`指针转换为不可变引用，调用时需要 `unsafe` 块。
     - 使用 `as_mut` 方法将 `NonNull`指针转换为可变引用，调用时需要 `unsafe` 块。
 
-### 2024/10/04
-沉迷小说，进展无
-
 ### 2024/10/05
 #### 进展
 104/110
@@ -146,6 +143,20 @@ let age = match parts[1].parse::<usize>() {
 - 昨天摆了一天，今天终于把链表合并解决了...( ＿ ＿)ノ｜
 - 之前一直用 `*(pa.unwrap().as_ptr).val` 来访问`NonNull`指向的值，今天才发现，用 `pa.unwrap().as_ref().val` 和 `pa.unwrap().as_mut().val` 会更方便一些。
 - 用明白Option和NonNull后还挺好用
+
 #### 学习内容
 - `NonNull`是裸指针类型，实现了`Copy trait`，不会发生所有权转移
 - `pa.unwrap().as_ref().val` 和 `pb.unwrap().as_ref().val` 是 T 类型的值。如果 T 没有实现 Copy trait，那么在比较这些值时会发生所有权转移，所以要加‘&’使用其引用
+
+### 2024/10/07
+#### 进展
+105/110
+#### 事件
+- 完成了二叉搜索树的查询和插入
+
+#### 学习内容
+- `Option::as_mut`：将 `Option<T>` 转换为 `Option<&mut T>`，以便对其中的值进行修改
+- `cmp` 方法用于比较两个值。它是` Ord trait` 的一部分，返回一个 `Ordering` `枚举，表示两个值之间的顺序关系。Ordering` 枚举有三个变体：`Less`、`Greater` 和 `Equal`，例如：`a.cmp(&b)` 比较 a 和 b 的值，若`a < b`，则返回 `Less`
+- 对于变量 `let mut current = &mut node`，
+    - 若有 `current = &mut other_node`，则将`current`借用的目标改变，不改变`node`内容；
+    - 若有 `current.right = Some(new_node)`，则`current`借用的目标不变，`node`内容改变，其本质是因为rust自动解引用，其等效于`(*current).right = Some(new_node)`
