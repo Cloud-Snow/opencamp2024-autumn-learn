@@ -160,3 +160,24 @@ let age = match parts[1].parse::<usize>() {
 - 对于变量 `let mut current = &mut node`，
     - 若有 `current = &mut other_node`，则将`current`借用的目标改变，不改变`node`内容；
     - 若有 `current.right = Some(new_node)`，则`current`借用的目标不变，`node`内容改变，其本质是因为rust自动解引用，其等效于`(*current).right = Some(new_node)`
+
+### 2025/10/08
+#### 进展
+110/110
+#### 事件
+- 果然还是在学校里效率高，一口气就把剩下的写完了ヾ(≧▽≦*)o
+#### 学习内容
+- `for &neighbour in &self.adj[node]`
+    - `&self.adj[node]：`
+    这里的 & 符号用于借用 `self.adj[node]`，即`&Vec<usize>`。
+    - `&neighbour`：
+    这里的 & 符号用于模式匹配，`&neighbour` 表示解引用`&usize` 类型的元素，并将其值绑定到 `neighbour` 变量上。
+- 在rust标准库中只实现了双端队列 `VecDeque` ，并没有单向队列，使用 `use std::collections::VecDeque` 引入
+- `HashSet` 是标准库实现的哈希表，使用 `use std::collections::HashSet` 引入
+- 在 Rust 中，可以使用标准库中的 `Vec` 来实现栈。`Vec` 提供了高效的 `push` 和 `pop` 操作，非常适合用来实现栈
+- 实现了 `Default` 特性的类型可以通过调用 `T::default()` 来获取一个默认值
+
+#### 问题
+- algorithm8怎么是用两个队列实现一个栈，感觉好奇怪。
+- algorithm9中的 `smallest_child_idx` 函数我怎么没用到？而且 `new_min` 和 `new_max` 感觉也是多余的。此外， `next` 函数我是是通过 `pop` 掉堆顶元素实现的，但这会破坏堆的结构。要想不怕破坏结构又达到题目效果，估计就要引入一个标记数组了。
+- 最后一题插入边，我还在想如何避免插入同样的边呢，结果发现根本不测试这个。仔细想了下，这个要搞的话还有个问题，要是插入的边的两个结点相同，但权重不同，是直接无视，还是更新已经插入的边呢？这样考虑的话就比较复杂了，既然本题不考察这个，索性不管了。
