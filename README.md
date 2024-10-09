@@ -3,10 +3,15 @@
 - [训练营官网](https://opencamp.cn/os2edu/camp/2024fall)
 - [训练营介绍](https://github.com/LearningOS)
 - [常见问题](https://opencamp.cn/os2edu/bbs/1382)
+- [信息汇总](https://opencamp.cn/os2edu/bbs/1390)
 
-**课程安排**
+## 课程安排
 ![课程安排](/src/all/schedule.png)
+## 目录
+- [第一阶段](#第一阶段-rust--rustlings)
+- [第二阶段](#第二阶段-rcore-设计与实现)
 
+---
 ## 第一阶段 Rust & Rustlings
 ### 资料
 - [Rust 程序设计语言 中文版](https://rustwiki.org/zh-CN/book/title-page.html)
@@ -16,7 +21,6 @@
 [rustlings]:https://github.com/LearningOS/rust-rustlings-2024-autumn-Cloud-Snow
 
 ### 2024/09/29
----
 #### 进展
 77/110
 #### 事件
@@ -27,7 +31,7 @@
 这里记录下之前遇到的问题，目前已解决
 
 #### 问题1
-- 构建rustlings环境时，[rustlings仓库][rustlings]README文档有以下这段话
+- 构建rustlings环境时，[rustlings仓库][rustlings] README文档有以下这段话
 > 进入clone下来的目录下的`exercises`文件夹，执行`rustlings watch`依次查看完成情况，并依次完成对应的练习。
 - 但我根据文档操作后却提示
 > /home/{uername}/.cargo/bin/rustlings must be run from the rustlings directory<br>Try cd rustlings/!
@@ -40,7 +44,7 @@
 - **解决方法：** 完善训练营账号资料信息，填写github账号名字。
 
 ### 2024/09/30
----
+
 #### 进展
 81/110
 
@@ -125,7 +129,7 @@ let age = match parts[1].parse::<usize>() {
 - `Box::into_raw` 和 `Box::from_raw` 是两个用于处理 Box 类型的原始指针的方法 。
     - `Box::into_raw` 方法将一个` Box<T>` 转换为一个原始指针 `*mut T`，但不会释放内存。
     - `Box::from_raw` 方法将一个原始指针 `*mut T` 转换回 `Box<T>`。这意味着你重新获得了该内存的所有权，并且 Box 将负责释放它。
-- 在 Rust 的构建脚本（build.rs）中，`cargo:` 后的属性用于与 Cargo 进行通信，以便在构建过程中设置环境变量、启用特性、指定重新编译条件等。
+- 在 Rust 的构建脚本（`build.rs`）中，`cargo:` 后的属性用于与 Cargo 进行通信，以便在构建过程中设置环境变量、启用特性、指定重新编译条件等。
     - `cargo:rustc-env=VAR_NAME=VALUE`，其中 `VAR_NAME` 是环境变量的名称，`VALUE` 是其值
     - `cargo:rustc-cfg=feature="FEATURE_NAME"`，其中 `FEATURE_NAME` 是要启用的特性名称。
 - `#[no_mangle]` 属性用于防止 Rust 对函数名称进行重整，使得函数可以通过其原始名称进行链接和调用。
@@ -180,4 +184,30 @@ let age = match parts[1].parse::<usize>() {
 #### 问题
 - algorithm8怎么是用两个队列实现一个栈，感觉好奇怪。
 - algorithm9中的 `smallest_child_idx` 函数我怎么没用到？而且 `new_min` 和 `new_max` 感觉也是多余的。此外， `next` 函数我是是通过 `pop` 掉堆顶元素实现的，但这会破坏堆的结构。要想不怕破坏结构又达到题目效果，估计就要引入一个标记数组了。
-- 最后一题插入边，我还在想如何避免插入同样的边呢，结果发现根本不测试这个。仔细想了下，这个要搞的话还有个问题，要是插入的边的两个结点相同，但权重不同，是直接无视，还是更新已经插入的边呢？这样考虑的话就比较复杂了，既然本题不考察这个，索性不管了。
+- algorithm10插入边，我还在想如何避免插入同样的边呢，结果发现根本不测试这个。仔细想了下，这个要搞的话还有个问题，要是插入的边的两个结点相同，但权重不同，是直接无视，还是更新已经插入的边呢？这样考虑的话就比较复杂了，既然本题不考察这个，索性不管了。
+---
+## 第二阶段 rCore 设计与实现
+### 资料
+[rCore-Camp-Guide-2024A](https://learningos.cn/rCore-Camp-Guide-2024A/)
+[rCore-Tutorial-Book-v3](https://rcore-os.cn/rCore-Tutorial-Book-v3/)
+### 仓库
+[rCore-Camp-Code-2024A](https://github.com/LearningOS/2024a-rcore-Cloud-Snow)
+
+### 2025/10/09
+#### 事件
+- 本以为提前写完了rustlings就需要等下一阶段了，没想到下一阶段的仓库也可以提前创建了，意外之喜。
+- 克隆实验代码，配置了qemu环境。
+
+#### 学习内容
+- 熟悉运行实验的流程
+```  
+$ git checkout ch1      #进入章节1
+$ cd os                 #进入os目录
+$ make run LOG=TRACE    #运行本章代码，并将日志级别设为 TRACE
+```
+- 可以先按下 `Ctrl+A` ，再按下 `X` 来退出 Qemu
+- 可以运行 `make debug` 来调试
+- 除了 std 之外，Rust 还有一个不需要任何操作系统支持的核心库 core， 它包含了 Rust 语言相当一部分核心机制
+- `riscv64gc-unknown-none-elf` 的 CPU 架构是 riscv64gc，厂商是 unknown，操作系统是 none， elf 表示没有标准的运行时库，没有任何系统调用的封装支持，但可以生成 ELF 格式的执行程序。
+#### 问题
+- 根据指导手册配置好了qemu环境，运行正常。不过实验要求 `Ubuntu18.04/20.04`，我的则是 `Ubuntu22.04`，希望后面不会出现问题。
