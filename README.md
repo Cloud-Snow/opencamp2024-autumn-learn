@@ -229,3 +229,76 @@ $ make run LOG=TRACE    #运行本章代码，并将日志级别设为 TRACE
 > [1]    8587 segmentation fault (core dumped)  qemu-riscv64 target/riscv64gc-unknown-none-elf/debug/os
 139
 
+### 2024/10/10
+#### 事件
+- 之前还在想这内核代码都已经给好了，怎么跟着教程改文件，今天才知道，原来是新建一个os项目。
+- 下载了even better toml插件，给toml文件高亮
+
+#### 学习内容
+- RISC-V
+    - `"ecall"`：RISC-V 的系统调用指令，处理器会触发一个环境调用异常，通常用于从用户模式切换到内核模式
+    - SYSCALL_EXIT：系统调用编号，值为 93，表示退出系统调用。
+    - x10 到 x17：这些寄存器通常用于传递系统调用的参数和返回值。
+        - x10 (a0)：第一个参数或返回值。
+        - x11 (a1)：第二个参数。
+        - x12 (a2)：第三个参数。
+        - x17 (a7)：系统调用编号。
+    - `inlateout("x10") args[0] => ret`：
+        - `inlateout`：用于输入和输出，将值传递给寄存器，并从寄存器读取值。
+        - `"x10"`：RISC-V 寄存器 x10（也称为 a0）。
+        - `args[0]`：将 args[0] 的值传递给寄存器 x10。
+        - `ret`：将 x10 的值存储到变量 ret 中。
+    - `in("x11") args[1]`
+        - `in`： 仅用于输入，将值传递给寄存器
+        - 将 `args[1]` 的值传递给寄存器 `x11`
+- `Write trait`
+    - `Write trait` 是 Rust 标准库中的一个 trait，定义了写入字符串数据的方法。它通常用于实现自定义的输出目标，例如将格式化字符串写入缓冲区、文件或其他数据结构，定义如下
+    ``` rust
+    pub trait Write {
+        fn write_str(&mut self, s: &str) -> fmt::Result;
+        fn write_fmt(&mut self, args: fmt::Arguments) -> fmt::Result {
+            // 默认实现
+            write_str(self, &format!("{}", args))
+        }
+    }
+    ```
+    - `write_str`：这是一个必须实现的方法，用于将字符串数据写入目标。
+    - `write_fmt`：这是一个可选实现的方法，用于将格式化数据写入目标。它有一个默认实现，调用 `write_str` 方法
+- 宏
+    - `#[macro_export]`：这个属性标记宏为可导出，使其可以在其他模块中使用。
+    - `$fmt: literal`：匹配一个字面量格式字符串
+    - `$(, $($arg: tt)+)?`：匹配可选的逗号后跟一个或多个参数（tt 代表任意标记树）。? 表示这个部分是可选的。
+    - `$crate::console::print`：调用当前 crate 中的 console 模块的 print 函数。
+    - `format_args!` 宏生成格式化参数，供 print 函数使用。
+- extern "C"：指定 _start 函数使用 C 语言的调用约定。
+- 加载内核程序的命令
+```shell
+qemu-system-riscv64 \
+            -machine virt \
+            -nographic \
+            -bios $(BOOTLOADER) \
+            -device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA)
+```
+- `bios $(BOOTLOADER)` 意味着硬件加载了一个 BootLoader 程序，即 RustSBI
+
+- `device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA)` 表示硬件内存中的特定位置 `$(KERNEL_ENTRY_PA)` 放置了操作系统的二进制代码 `$(KERNEL_BIN)` 。 `$(KERNEL_ENTRY_PA)` 的值
+是 `0x80200000` 。
+- 把ELF执行文件转成bianary文件
+``` shell
+ rust-objcopy --binary-architecture=riscv64 target/riscv64gc-unknown-none-elf/release/os --strip-all -O binary target/riscv64gc-unknown-none-elf/release/os.bin
+```
+
+#### 问题
+- 在自定义 `panic_handler` 后 `cargo build` 报错
+> error: unwinding panics are not supported without std
+
+**原因：** 编译器默认使用了展开 `(unwinding)` 的方式处理 panic，而在 `no_std` 环境中，展开是不被支持的。
+**解决办法：** 忘记在 `os/.cargo/config` 中配置 target 了(编译器更推荐命名为`config.toml`)
+``` rust
+# os/.cargo/config
+[build]
+target = "riscv64gc-unknown-none-elf"
+```
+
+- 自己创建的项目与clone下的仓库中的PanicInfo定义结构不一致
+**原因** 自己创建的项目使用的toolchain 是 nightly-x86_64-unknown-linux-gnu unchanged ，而clone下的仓库使用的toolchain是 nightly-2024-05-02-x86_64-unknown-linux-gnu unchanged
