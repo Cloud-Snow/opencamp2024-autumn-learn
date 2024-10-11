@@ -165,7 +165,7 @@ let age = match parts[1].parse::<usize>() {
     - 若有 `current = &mut other_node`，则将`current`借用的目标改变，不改变`node`内容；
     - 若有 `current.right = Some(new_node)`，则`current`借用的目标不变，`node`内容改变，其本质是因为rust自动解引用，其等效于`(*current).right = Some(new_node)`
 
-### 2025/10/08
+### 2024/10/08
 #### 进展
 110/110
 #### 事件
@@ -193,7 +193,7 @@ let age = match parts[1].parse::<usize>() {
 ### 仓库
 [rCore-Camp-Code-2024A](https://github.com/LearningOS/2024a-rcore-Cloud-Snow)
 
-### 2025/10/09
+### 2024/10/09
 #### 事件
 - 本以为提前写完了rustlings就需要等下一阶段了，没想到下一阶段的仓库也可以提前创建了，意外之喜。
 - 克隆实验代码，配置了qemu环境。
@@ -211,3 +211,21 @@ $ make run LOG=TRACE    #运行本章代码，并将日志级别设为 TRACE
 - `riscv64gc-unknown-none-elf` 的 CPU 架构是 riscv64gc，厂商是 unknown，操作系统是 none， elf 表示没有标准的运行时库，没有任何系统调用的封装支持，但可以生成 ELF 格式的执行程序。
 #### 问题
 - 根据指导手册配置好了qemu环境，运行正常。不过实验要求 `Ubuntu18.04/20.04`，我的则是 `Ubuntu22.04`，希望后面不会出现问题。
+
+### 2024/10/10
+#### 事件
+第二阶段好难，完全看不懂啊o(TヘTo)
+#### 学习内容
+- `file <filename>` 查看文件格式
+- `rust-readobj -h <filename>` 查看文件头信息
+- `rust-objdump -S <filename>` 反汇编导出汇编程序
+- QEMU有两种运行模式：
+    - User mode 模式，即用户态模拟，如 `qemu-riscv64` 程序， 能够模拟不同处理器的用户态指令的执行，并可以直接解析ELF可执行文件， 加载运行那些为不同处理器编译的用户级Linux应用程序。
+    - System mode 模式，即系统态模式，如 `qemu-system-riscv64` 程序， 能够模拟一个完整的基于不同CPU的硬件系统，包括处理器、内存及其他外部设备，支持运行完整的操作系统。
+- SBI 是 RISC-V 的一种底层规范，RustSBI 是它的一种实现。 操作系统内核与 RustSBI 的关系有点像应用与操作系统内核的关系，后者向前者提供一定的服务。只是SBI提供的服务很少， 比如关机，显示字符串等。
+
+#### 问题
+- 运行`qemu-riscv64 target/riscv64gc-unknown-none-elf/debug/os` 会报错
+> [1]    8587 segmentation fault (core dumped)  qemu-riscv64 target/riscv64gc-unknown-none-elf/debug/os
+139
+
