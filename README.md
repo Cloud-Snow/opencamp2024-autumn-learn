@@ -292,15 +292,15 @@ qemu-system-riscv64 \
 - 在自定义 `panic_handler` 后 `cargo build` 报错
 > error: unwinding panics are not supported without std
 
-**原因：** 编译器默认使用了展开 `(unwinding)` 的方式处理 panic，而在 `no_std` 环境中，展开是不被支持的。
+**原因：** 编译器默认使用了展开 `(unwinding)` 的方式处理 panic，而在 `no_std` 环境中，展开是不被支持的。<br>
 **解决办法：** 忘记在 `os/.cargo/config` 中配置 target 了(编译器更推荐命名为`config.toml`)
 ``` rust
 # os/.cargo/config
 [build]
 target = "riscv64gc-unknown-none-elf"
 ```
-- 自己创建的项目与clone下的仓库中的PanicInfo定义结构不一致
-**原因：** 自己创建的项目使用的toolchain 是 `nightly-x86_64-unknown-linux-gnu` ，而clone下的仓库使用的toolchain是 `nightly-2024-05-02-x86_64-unknown-linux-gnu` 
+- 自己创建的项目与clone下的仓库中的PanicInfo定义结构不一致<br>
+**原因：** 自己创建的项目使用的toolchain 是 `nightly-x86_64-unknown-linux-gnu` ，而clone下的仓库使用的toolchain是 `nightly-2024-05-02-x86_64-unknown-linux-gnu` <br>
 **解决办法：** 在项目中添加 `rust-toolchain.toml` 配置 `channel = "nightly-2024-05-02"`
 
 ### 2024/10/12
@@ -322,5 +322,5 @@ target = "riscv64gc-unknown-none-elf"
 - azy_static! 宏提供了全局变量的运行时初始化功能
 #### 问题
 - 配置完toolchain后报错 
-> use of unstable library feature 'panic_info_message'
+> use of unstable library feature 'panic_info_message'<br>
 **解决办法** 在 main.rs 中添加 `#![feature(panic_info_message)]`
