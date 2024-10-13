@@ -222,14 +222,14 @@ $ make run LOG=TRACE    #运行本章代码，并将日志级别设为 TRACE
 - QEMU有两种运行模式：
     - User mode 模式，即用户态模拟，如 `qemu-riscv64` 程序， 能够模拟不同处理器的用户态指令的执行，并可以直接解析ELF可执行文件， 加载运行那些为不同处理器编译的用户级Linux应用程序。
     - System mode 模式，即系统态模式，如 `qemu-system-riscv64` 程序， 能够模拟一个完整的基于不同CPU的硬件系统，包括处理器、内存及其他外部设备，支持运行完整的操作系统。
-- SBI 是 RISC-V 的一种底层规范，RustSBI 是它的一种实现。 操作系统内核与 RustSBI 的关系有点像应用与操作系统内核的关系，后者向前者提供一定的服务。只是SBI提供的服务很少， 比如关机，显示字符串等。
+- SBI (Supervisor Binary Interface)是 RISC-V 的一种底层规范，RustSBI 是它的一种实现。 操作系统内核与 RustSBI 的关系有点像应用与操作系统内核的关系，后者向前者提供一定的服务。只是SBI提供的服务很少， 比如关机，显示字符串等。
 
 #### 问题
 - 运行`qemu-riscv64 target/riscv64gc-unknown-none-elf/debug/os` 会报错
 > [1]    8587 segmentation fault (core dumped)  qemu-riscv64 target/riscv64gc-unknown-none-elf/debug/os
 139
 
-### 2024/10/10
+### 2024/10/11
 #### 事件
 - 之前还在想这内核代码都已经给好了，怎么跟着教程改文件，今天才知道，原来是新建一个os项目。
 - 下载了even better toml插件，给toml文件高亮
@@ -299,6 +299,28 @@ qemu-system-riscv64 \
 [build]
 target = "riscv64gc-unknown-none-elf"
 ```
-
 - 自己创建的项目与clone下的仓库中的PanicInfo定义结构不一致
-**原因** 自己创建的项目使用的toolchain 是 nightly-x86_64-unknown-linux-gnu unchanged ，而clone下的仓库使用的toolchain是 nightly-2024-05-02-x86_64-unknown-linux-gnu unchanged
+**原因：** 自己创建的项目使用的toolchain 是 `nightly-x86_64-unknown-linux-gnu` ，而clone下的仓库使用的toolchain是 `nightly-2024-05-02-x86_64-unknown-linux-gnu` 
+**解决办法：** 在项目中添加 `rust-toolchain.toml` 配置 `channel = "nightly-2024-05-02"`
+
+### 2024/10/12
+#### 事件
+- 到了第二章就不太方便自己从头搭建仓库了，还是用clone的仓库比较好，不过第一章自己从头实现还是挺有收获的。
+#### 学习内容
+- `#![]` 和 `#[]` 都是属性，`#![]` 属性用于整个 crate 或模块，`#[]` 属性用于特定的项
+- `SBI_SHUTDOWN`：通过 SBI 接口请求关机，通常用于操作系统内核。
+- `SYSCALL_EXIT`：通过系统调用接口请求退出当前用户态程序，通常用于用户态程序
+- .bss和.data区别
+    - .bss 段（Block Started by Symbol）是可执行文件中的一部分，通常用于存放程序中的未初始化的全局变量或静态变量，不会占用可执行文件的磁盘空间，在程序运行时分配内存并初始化为 0
+    - .data 段用于存放初始化的全局变量和静态变量，数据会被写入到可执行文件中，并占用磁盘空间
+- ecall和eret由来
+> 为了让应用程序获得操作系统的函数服务，采用传统的函数调用方式（即通常的 call 和 ret 指令或指令组合）将会直接绕过硬件的特权级保护检查。为了解决这个问题， RISC-V 提供了新的机器指令：执行环境调用指令（Execution Environment Call，简称 ecall ）和一类执行环境返回（Execution Environment Return，简称 eret ）指令。
+- sret 与 eret 的联系与区别
+> eret 代表一类执行环境返回指令，而 sret 特指从 Supervisor 模式的执行环境（即 OS 内核）返回的那条指令，也是本书中主要用到的指令。除了 sret 之外， mret 也属于执行环境返回指令，当从 Machine 模式的执行环境返回时使用， RustSBI 会用到这条指令
+- ecall:具有用户态到内核态的执行环境切换能力的函数调用指令；
+- sret :具有内核态到用户态的执行环境切换能力的函数返回指令。
+- azy_static! 宏提供了全局变量的运行时初始化功能
+#### 问题
+- 配置完toolchain后报错 
+> use of unstable library feature 'panic_info_message'
+**解决办法** 在 main.rs 中添加 `#![feature(panic_info_message)]`
