@@ -37,7 +37,7 @@
 > /home/{uername}/.cargo/bin/rustlings must be run from the rustlings directory<br>Try cd rustlings/!
 - 然而我在仓库中并没有找到`rustlings`目录，后来猛然发现这个仓库的根目录其实就是`rustlings`目录，于是我便在根目录下执行`rustlings watch`，果然成功。
 
-- **总结**：我怀疑README文档有误，不应该进入`exercises`文件夹，应该直接在根目录下执行命令。
+- **总结**：我怀疑README文档有误，不应该进入`exercises`文件夹，应该直接在根目录下执行命令。(该问题已被修复)
 
 #### 问题2
 - 训练营网站的[排行榜](https://opencamp.cn/os2edu/camp/2024fall/stage/1?tab=rank)只显示github名字，不显示真实姓名等信息。
@@ -190,6 +190,9 @@ let age = match parts[1].parse::<usize>() {
 ### 资料
 [rCore-Camp-Guide-2024A](https://learningos.cn/rCore-Camp-Guide-2024A/)
 [rCore-Tutorial-Book-v3](https://rcore-os.cn/rCore-Tutorial-Book-v3/)
+[RISC-V-Reader](http://riscvbook.com/chinese/RISC-V-Reader-Chinese-v1.pdf)
+### 寄存器表
+![寄存器表](/src/all/risc-v_register.png)
 ### 仓库
 [rCore-Camp-Code-2024A](https://github.com/LearningOS/2024a-rcore-Cloud-Snow)
 
@@ -323,4 +326,126 @@ target = "riscv64gc-unknown-none-elf"
 #### 问题
 - 配置完toolchain后报错 
 > use of unstable library feature 'panic_info_message'<br>
-**解决办法** 在 main.rs 中添加 `#![feature(panic_info_message)]`
+
+**解决办法** 在 `main.rs` 中添加 `#![feature(panic_info_message)]`
+
+### 2024/10/13
+#### 事件
+- 粗略阅读[risc-v手册](http://riscvbook.com/chinese/RISC-V-Reader-Chinese-v1.pdf)
+
+#### 学习内容
+- 机器模式(M)和监管模式(S)
+    - 机器模式(M)用于运行最可信的代码，是一个RISC-V硬件线程可执行的最高特权模式，在 M 模式下运行的硬件线程能完全访问内存、I/O 和底层系统功能
+    - 监管模式(S)用于为Linux、FreeBSD和Windows等操作系统提供支持
+
+|级别|编码|名称|
+|---|---|---|
+|0|00|用户/应用模式 (U, User/Application)|
+|1|01|监督模式 (S, Supervisor)|
+|2|10|虚拟监督模式 (H, Hypervisor)|
+|3|11|机器模式 (M, Machine)|
+
+### 2024/10/14
+#### 学习内容
+- 应用管理器的实现
+```rust
+lazy_static! {
+    static ref APP_MANAGER: UPSafeCell<AppManager> = unsafe {
+        UPSafeCell::new({
+            extern "C" {
+                fn _num_app();
+            }
+            let num_app_ptr = _num_app as usize as *const usize;
+            let num_app = num_app_ptr.read_volatile();
+            let mut app_start: [usize; MAX_APP_NUM + 1] = [0; MAX_APP_NUM + 1];
+            let app_start_raw: &[usize] =
+                core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1);
+            app_start[..=num_app].copy_from_slice(app_start_raw);
+            AppManager {
+                num_app,
+                current_app: 0,
+                app_start,
+            }
+        })
+    };
+}
+```
+- `lazy_static!`：这是一个宏，用于定义惰性初始化的全局静态变量。惰性初始化意味着变量的初始化只会在第一次使用时发生，而不是在程序启动时立即发生。
+- `static ref`：定义一个全局静态引用，保证在整个程序生命周期中只会初始化一次
+- `UPSafeCell<AppManager>`：这是对 `AppManager` 的一个包装，调用`exclusive_access()`，允许它在 Rust 的安全规则下进行内部的可变性操作。`UPSafeCell` 一般是用于单线程环境的安全封装，防止全局对象 `APP_MANAGER` 被重复获取。
+- `unsafe`：Rust 的所有静态全局变量都是不可变的，使用可变全局变量需要使用 unsafe 代码块来绕过 Rust 的编译器安全检查。
+- `extern "C" `表示调用一个用 C 语言编写的外部函数 `_num_app()`，其定义于 `link_app.S ` 中，用于解析出应用数量以及各个应用的开头。
+- `let num_app_ptr = _num_app as usize as *const usize`;：首先将 `_num_app` 函数的地址转换成一个 usize，然后再将其转换为一个指向 usize 类型的指针。这意味着 `_num_app` 函数实际上指向的是一个存储有应用数量的地址。不能省去as usize，因为_num_app 是一个符号地址，不能直接被解释为指针
+- `let num_app = num_app_ptr.read_volatile()`;：通过使用 `read_volatile` 方法读取指针指向的值，即应用的数量。`read_volatile` 保证读取操作不会被编译器优化，从而确保访问硬件相关的内存地址的正确性。
+- `let mut app_start: [usize; MAX_APP_NUM + 1] = [0; MAX_APP_NUM + 1];`：定义了一个长度为 MAX_APP_NUM + 1 的数组，用于存储应用程序的起始地址。
+- `let app_start_raw: &[usize] = core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1);：`创建了一个从 num_app_ptr.add(1) 开始、长度为 num_app + 1 的切片。这个操作读取了应用程序的起始地址列表，from_raw_parts 是一个不安全操作，用于从原始指针和长度创建切片。
+- `app_start[..=num_app].copy_from_slice(app_start_raw);`：将 app_start_raw 的数据拷贝到 app_start 数组中。这个操作将应用程序的起始地址填入 app_start 数组。
+- 数组长度比应用数量多1是因为除了每个应用程序的起始地址外，还需要记录最后一个应用程序的结束地址。
+- _num_app 汇编代码如下，相当于一个数组
+``` asm
+_num_app:
+ 7    .quad 3
+ 8    .quad app_0_start
+ 9    .quad app_1_start
+10    .quad app_2_start
+11    .quad app_2_end
+12
+```
+- `.quad` 是指 8 字节（64 位）的数据类型
+
+### 2024/10/15
+#### 事件
+- 配置ci-user
+- 学习特权级切换
+- 学习risc-v汇编指令
+#### 学习内容
+- 进入 S 特权级 Trap 的相关 CSR（Control and Status Register，控制与状态寄存器）
+
+|CSR 名|该 CSR 与 Trap 相关的功能|
+|-----|----------------------|
+|sstatus|SPP 等字段给出 Trap 发生之前 CPU 处在哪个特权级（S/U）等信息|
+|sepc|当 Trap 是一个异常的时候，记录 Trap 发生之前执行的最后一条指令的地址|
+|scause|描述 Trap 的原因|
+|stval|给出 Trap 附加信息|
+|stvec|控制 Trap 处理代码的入口地址|
+- stevc结构
+    - MODE 位于 [1:0]，长度为 2 bits；
+    - BASE 位于 [63:2]，长度为 62 bits。
+- 当 MODE 字段为 0 的时候， stvec 被设置为 Direct 模式，此时进入 S 模式的 Trap 无论原因如何，处理 Trap 的入口地址都是 `BASE<<2` ， CPU 会跳转到这个地方进行异常处理。本实验只会将 stvec 设置为 Direct 模式。而 stvec 还可以被设置为 Vectored 模式。
+- `csrrw rd, csr, rs` 可以将CSR当前的值读到通用寄存器rd中，然后将通用寄存器rs的值写入该CSR。
+- `csrrw sp, sscratch, sp` 起到交换sp和sscratch的效果
+- sb（Store Byte）：存储 8 位（1 字节）的数据。
+- sh（Store Halfword）：存储 16 位（2 字节）的数据。
+- sw（Store Word）：存储 32 位（4 字节）的数据。
+- sd（Store Doubleword）：存储 64 位（8 字节）的数据。
+- .rept 27：重复以下的指令 27 次
+- .set n, 5：设置变量 n 为 5
+
+### 2024/10/16
+#### 学习内容
+- `.align <n>` 将地址2^n^字节对齐
+- sscratch 是一个CSR，用于管理模式下存储临时数据
+
+### 2024/10/19
+#### 事件
+- 最近实验课好多，都没时间学rust了
+- 今天学校有线下交流会，可惜有课去不了
+
+#### 学习内容
+- `write_volatile`：这是一个不安全的方法，用于向指定的内存地址写入数据，并确保这个写操作不会被编译器优化掉
+- `let app_start = unsafe { core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1) };`
+    - `num_app_ptr.add(1)`：这是一个**指针**运算，将 num_app_ptr 指针向前移动一个位置。假设 num_app_ptr 是一个指向 usize 类型的指针，那么 num_app_ptr.add(1) 将指向下一个 usize 类型的位置。
+    - `num_app + 1`：这是**切片的长度**。num_app 是一个 usize 类型的变量，表示应用程序的数量。num_app + 1 表示切片的长度为 num_app + 1。
+    - `core::slice::from_raw_parts`：这个函数用于从一个原始指针和长度创建一个切片。它是一个不安全的操作，因为它假设指针和长度是有效的
+
+### 2024/10/23
+#### 学习内容
+- 在 `.find(|id| inner.tasks[*id].task_status == TaskStatus::Ready)` 这段代码中，id 是一个引用（&usize），因为 find 方法会传递迭代器元素的引用给闭包。通过解引用 *id 获取 id 指向的值，并使用它来索引 inner.tasks。这种方式确保了代码的高效性和安全性，避免了不必要的拷贝。
+- 在 Rust 中，`drop` 函数用于显式地销毁一个值并释放其资源
+- `sstatus.sie`: Supervisor Interrupt Enable（超级模式中断使能位）
+    - 设置（写入1）以允许超级模式下的中断。
+    - 清除（写入0）以禁用中断。
+- `sstatus.spie`: Supervisor Previous Interrupt Enable（超级模式先前中断使能位）
+    - 在处理中断之前，保存当前的sstatus.sie状态。
+    - 进入中断处理程序时，将sstatus.sie清除，以防止中断嵌套。
+    - 中断处理完成后，可以恢复sstatus.sie的值。
